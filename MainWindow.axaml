@@ -61,6 +61,34 @@
                 </Button>
             </Grid>
             <Grid ShowGridLines="False"
+                  RowDefinitions="Auto, Auto, Auto"
+                  HorizontalAlignment="Left"
+                  VerticalAlignment="Top"
+                  Margin="40 130 0 0">
+                <TextBlock Grid.Row="0"
+                        x:Name="NewsLabel"   
+                        Margin="0"
+                        Height="50"
+                        Width="700"
+                        Foreground="ForestGreen"
+                        FontSize="40"
+                        Text ="Нет соединения с сервером">
+                </TextBlock>
+                <TextBlock Grid.Row="1"
+                        x:Name="NewsRTB" 
+                        Height="430"
+                        Width="700"
+                        Margin="50 10 0 0"
+                        Foreground="LightGray"
+                        FontSize="25"
+                        TextWrapping="Wrap"
+                        Text ="Но если сборка уже установлена, то вы можете начать играть :3">
+                </TextBlock>
+                <TextBlock Grid.Row="2"/>
+            </Grid>
+            
+            
+            <Grid ShowGridLines="False"
                   ColumnDefinitions="Auto, Auto"
                   HorizontalAlignment="Right"
                   VerticalAlignment="Top"

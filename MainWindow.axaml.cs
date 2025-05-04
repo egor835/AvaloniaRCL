@@ -268,6 +268,19 @@ public partial class MainWindow : Window
             VersionBox.SelectedItem = Globals.config.version;
         }
         
+        //news
+        if (Globals.isInternetHere)
+        {
+            string newsPath = Path.Combine(GlobalPaths.datapath, "news.json");
+            string newsCont = File.ReadAllText(newsPath);
+            Newz? news = JsonSerializer.Deserialize<Newz>(newsCont);
+            NewsLabel.Text = news.title;
+            NewsRTB.Text = "";
+            foreach (var neww in news.news)
+            {
+                NewsRTB.Text += ("• " + neww + (Environment.NewLine + Environment.NewLine));
+            }
+        }
     }
 
     private async void Button_Click(object sender, RoutedEventArgs e)
