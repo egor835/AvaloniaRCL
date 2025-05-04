@@ -2,8 +2,190 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Name="MainLauncherWindow"
         x:Class="RCL.MainWindow"
-        Title="RCL">
-    Welcome to Avalonia!
+        Title="ReignCraft Launcher"
+        Width="960"
+        Height="640"
+        CanResize="False"
+        TransparencyLevelHint="Transparent"
+        Background="Transparent"
+        SystemDecorations="None"
+        Opened="WindowStartup">
+    <Window.Styles>
+        <Style Selector="Button.closeBtn:pointerover ContentPresenter">
+            <Setter Property="Background" Value="Red"/>
+        </Style>
+        <Style Selector="Button.startBtn:pointerover ContentPresenter">
+            <Setter Property="Background" Value="DarkGoldenrod"/>
+        </Style>
+    </Window.Styles>
+    <Viewbox>
+        <Border 
+        x:Name="MainBorder" 
+        CornerRadius="35" 
+        Background="Black"
+        ClipToBounds="True"
+        Width="1200"
+        Height="800">
+        <Panel>
+            
+            <Image x:Name="bgImage" Source="Assets/bg.png"/>
+            <Image 
+                Margin="20"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Top"
+                Source="Assets/Logo.png"
+                Width="378"
+                Height="72"
+                PointerReleased="WindowDragHandle_OnPointerReleased"
+                PointerPressed="WindowDragHandle_OnPointerPressed"
+                PointerMoved="WindowDragHandle_OnPointerMoved"/>
+            <Grid ShowGridLines="False"
+                  ColumnDefinitions="Auto, Auto"
+                  HorizontalAlignment="Left"
+                  VerticalAlignment="Top"
+                  Margin="20">
+                <Button Grid.Column="0"
+                        Height="70"
+                        Width="70"
+                        CornerRadius="35"
+                        Margin="0 0 5 0 ">
+                    <Image Source="Assets/Sunflower.png"/>
+                </Button>
+                <Button Grid.Column="1"
+                        Height="70"
+                        Width="70"
+                        CornerRadius="35">
+                    <Image Source="Assets/Textbook.png"/>
+                </Button>
+            </Grid>
+            <Grid ShowGridLines="False"
+                  ColumnDefinitions="Auto, Auto"
+                  HorizontalAlignment="Right"
+                  VerticalAlignment="Top"
+                  Margin="20">
+                <Button Grid.Column="0"
+                        Height="70"
+                        Width="70"
+                        CornerRadius="35"
+                        Margin="0 0 5 0 ">
+                    <Image Source="Assets/hide.png"/>
+                </Button>
+                <Button Grid.Column="1"
+                        Height="70"
+                        Width="70"
+                        CornerRadius="35"
+                        Background="DarkRed"
+                        Classes="closeBtn"
+                        Click="CloseBtnClick">
+                    <Image Source="Assets/Exit.png"/>
+                </Button>
+            </Grid>
+            <Grid ShowGridLines="False"
+                  VerticalAlignment="Bottom"
+                  HorizontalAlignment="Left"
+                  ColumnDefinitions="330, 150, 240, 150, 330">
+                <Grid Grid.Column="0" ShowGridLines="False"
+                      RowDefinitions="Auto Auto Auto"
+                      ColumnDefinitions="Auto Auto Auto"
+                      HorizontalAlignment="Left"
+                      VerticalAlignment="Bottom"
+                      Margin="20 0 0 20 "
+                >
+                    <Image Grid.Column="0" Grid.Row="0" 
+                           Source="Assets/Icon_nickname.png"
+                           Margin="3"
+                           Width="40"
+                           Height="40"/>
+                    <TextBox Grid.Column="1" Grid.Row="0" 
+                             x:Name="NickBox" 
+                             CornerRadius="20"
+                             Width="262"
+                             Height="40"
+                             VerticalContentAlignment="Center"
+                             Watermark="Введите свой ник"
+                             Margin="0,3"/>
+                    <Image Grid.Column="0" Grid.Row="1" 
+                           Source="Assets/Icon_builds.png"
+                           Margin="3"
+                           Width="40"
+                           Height="40"/>
+                    <ComboBox Grid.Column="1" Grid.Row="1" 
+                              x:Name="VersionBox" 
+                              CornerRadius="20"
+                              Width="262"
+                              Height="40"
+                              VerticalContentAlignment="Center"
+                              Margin="0,3"/>
+                </Grid>
+                <Button Grid.Column="1"
+                        Height="100"
+                        Width="100"
+                        CornerRadius="50"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Bottom"
+                        Margin="0 0 0 20 "
+                        Click="openFiles">
+                    <Image Source="Assets/Mods.png"
+                           Height="60"
+                           Width="60"/>
+                </Button>
+                <Image Grid.Column="2" 
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Bottom"
+                       Source="Assets/Crown.png"
+                       Width="240"
+                       Height="171"/>
+                <Button Grid.Column="3"
+                        Height="100"
+                        Width="100"
+                        CornerRadius="50"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Bottom"
+                        Margin="0 0 0 20">
+                    <Image Source="Assets/Settings.png"
+                           Height="60"
+                           Width="60"/>
+                </Button>
+                <Grid Grid.Column="4" ShowGridLines="False"
+                      RowDefinitions="Auto, Auto"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Bottom"
+                      Margin="0 0 20 20">
+                    <ProgressBar Grid.Row="0" Grid.Column="0"
+                                 x:Name="InstallProgress"
+                                 IsIndeterminate="True"
+                                 Maximum="100"
+                                 HorizontalAlignment="Right"
+                                 Width="310"
+                                 Height="10"
+                                 Margin="0, 10, 0, 10"/>
+                    <Button Grid.Row="1" Grid.Column="0" 
+                            Classes="startBtn"
+                            x:Name="StartButton" 
+                            CornerRadius="35" 
+                            HorizontalAlignment="Right"
+                            Background="Gold" 
+                            Height="100" 
+                            Width="310" 
+                            HorizontalContentAlignment="Center" 
+                            VerticalContentAlignment="Center" 
+                            FontSize="30" 
+                            Click="Button_Click"
+                            Content="Install">
+                    </Button>
+                </Grid>
+            </Grid>
+            <TextBlock     
+                x:Name="InstallProgressHeader"
+                FontSize="18" 
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Margin="0 0 20 148"
+                Foreground="White"
+                Text="Downloading"/>
+        </Panel>
+        </Border>
+    </Viewbox>
 </Window>
