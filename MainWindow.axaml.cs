@@ -6,9 +6,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -20,6 +20,7 @@ using CmlLib.Core.Installer.Forge;
 using CmlLib.Core.ProcessBuilder;
 using CmlLib.Core.VersionLoader;
 using MsBox.Avalonia;
+using MsBox.Avalonia.Enums;
 
 namespace RCL;
 
@@ -63,6 +64,7 @@ public partial class MainWindow : Window
         public int ram { get; set; }
         public bool proxy { get; set; }
         public bool faststart { get; set; }
+        public bool enableShaders { get; set; }
         public bool notafirsttime { get; set; }
     }
     
@@ -83,12 +85,13 @@ public partial class MainWindow : Window
         public static string shaderpacks = Path.Combine(mcpath, "shaderpacks");
         public static string usershaders = Path.Combine(mcpath, "user_shaderpacks");
         public static string configfolder = Path.Combine(mcpath, "config");
+        public static string shaderconfig = Path.Combine(configfolder, "oculus.properties");
     }
     
     public static class Globals
     {
         //Launcher version:
-        public static string launcher_version = "1.1.0";
+        public static string launcher_version = "1.1.1";
         public static string server_version = "0.0.0";
         public static string update_type = "none";
         public static bool pack_update = false;
@@ -103,6 +106,7 @@ public partial class MainWindow : Window
         //parameters
         public static bool isInternetHere = true;
         public static bool isLoading = false;
+        public static bool notafirstrun = false;
     }
 
     private static void ReadConfig()
@@ -115,6 +119,7 @@ public partial class MainWindow : Window
                 version = "",
                 ram = 4096,
                 proxy = false,
+                enableShaders = false,
                 faststart = false,
                 notafirsttime = false,
             };
@@ -151,7 +156,7 @@ public partial class MainWindow : Window
     
     private async void WindowStartup(object? sender, EventArgs eventArgs)
     {
-        NickBox.Text = Globals.config.username;
+        UpdateText.Text = "Версия " + Globals.launcher_version;
         Process[] pname = Process.GetProcessesByName("RCL");
         if (pname.Length > 1)
         {
@@ -210,7 +215,7 @@ public partial class MainWindow : Window
                 Environment.Exit(0);
             }   
         }
-        
+        NickBox.Text = Globals.config.username;
         
         //bg and get versions
         if (Globals.isInternetHere)
@@ -281,6 +286,16 @@ public partial class MainWindow : Window
                 NewsRTB.Text += ("• " + neww + (Environment.NewLine + Environment.NewLine));
             }
         }
+        if (Globals.update_type != "none")
+        {
+            UpdateText.Text = "Доступно обновление лаунчера!";
+            UpdateText.Foreground = Avalonia.Media.Brushes.Gold;
+            updateBtn.IsVisible = true;
+        }
+        if (Globals.update_type == "major")
+        {
+            updatelauncher();
+        }
     }
 
     private async void Button_Click(object sender, RoutedEventArgs e)
@@ -311,9 +326,13 @@ public partial class MainWindow : Window
         {
             try
             {
+                FileMgr fileMgr = new FileMgr();
                 StartButton.Content = "plzwait";
                 Globals.config.username = NickBox.Text.Trim();
-                InstallProgress.IsIndeterminate = false;
+                PackUpdateBox.IsVisible = false;
+                InstallProgressHeader.IsVisible = true;
+                InstallProgress.IsVisible = true;
+                Ver? fullVersion = Globals.packfile.ver.FirstOrDefault(v => v.name == VersionBox.SelectedItem);
 
                 var process = new Process();
                 if (!Globals.config.notafirsttime)
@@ -337,6 +356,119 @@ public partial class MainWindow : Window
                 }
 
 
+                //silly mod updater
+                if (Globals.isInternetHere && Globals.pack_update)
+                {
+                    await fileMgr.DownloadEveryFile(Path.Combine(GlobalPaths.serverpath, "mods"), GlobalPaths.servmodfolder, Globals.dwn_mods, InstallProgress, InstallProgressHeader);
+                    await fileMgr.DownloadEveryFile(Path.Combine(GlobalPaths.serverpath, "resourcepacks"), GlobalPaths.serverpacks, Globals.dwn_resourcepacks, InstallProgress, InstallProgressHeader);
+                    await fileMgr.DownloadEveryFile(Path.Combine(GlobalPaths.serverpath, "shaders"), GlobalPaths.shaderpacks, Globals.dwn_shaders, InstallProgress, InstallProgressHeader);
+                    await fileMgr.DownloadAndUnpack(Path.Combine(GlobalPaths.serverpath, "configs.zip"), GlobalPaths.configfolder);
+                    //README
+                    DownloadFileSync(Path.Combine(Globals.json.updateServer, "README.TXT"), Path.Combine(GlobalPaths.mcpath, "README.TXT"));
+                }
+
+                //MODPACK CHANGER (plz hewp me)
+                try { Array.ForEach(Directory.GetFiles(GlobalPaths.globmodfolder), File.Delete); }
+                catch { Directory.CreateDirectory(GlobalPaths.globmodfolder); }
+                InstallProgressHeader.Text = "Installing mods";
+                foreach (var mod in fullVersion.mods)
+                {
+                    File.Copy(Path.Combine(GlobalPaths.servmodfolder, mod), Path.Combine(GlobalPaths.globmodfolder, mod), true);
+                }
+                try
+                {
+                    foreach (var usermod in Directory.GetFiles(GlobalPaths.usermodfolder))
+                    {
+                        string modname = Path.GetFileName(usermod);
+                        File.Copy(usermod, Path.Combine(GlobalPaths.globmodfolder, modname), true);
+                    }
+                }
+                catch { Directory.CreateDirectory(GlobalPaths.usermodfolder); }
+
+                //texturez!!!
+                try { Array.ForEach(Directory.GetFiles(GlobalPaths.resourcepacks), File.Delete); }
+                catch { Directory.CreateDirectory(GlobalPaths.resourcepacks); }
+                InstallProgressHeader.Text = "Installing resourcepacks";
+                foreach (var rps in fullVersion.resourcepacks)
+                {
+                    File.Copy(Path.Combine(GlobalPaths.serverpacks, rps), Path.Combine(GlobalPaths.resourcepacks, rps), true);
+                }
+                try
+                {
+                    foreach (var usrpack in Directory.GetFiles(Path.Combine(GlobalPaths.mcpath, "user_resourcepacks")))
+                    {
+                        string packname = Path.GetFileName(usrpack);
+                        File.Copy(usrpack, Path.Combine(GlobalPaths.resourcepacks, packname), true);
+                    }
+                }
+                catch { Directory.CreateDirectory(Path.Combine(GlobalPaths.mcpath, "user_resourcepacks")); }
+
+                //enable shaders (yes, itz code reuse, i know that it sucks)
+                if (Globals.config.enableShaders)
+                {
+                    var opline = "shaderPack=";
+                    if (File.Exists(GlobalPaths.shaderconfig))
+                    {
+                        string[] arrLine = File.ReadAllLines(GlobalPaths.shaderconfig);
+                        foreach (var item in arrLine.Select((value, index) => new { value, index }))
+                        {
+                            var lin = item.value;
+                            var ind = item.index;
+                            if (lin.Contains("shaderPack"))
+                            {
+                                foreach (var rp in fullVersion.shaders)
+                                {
+                                    opline = "shaderPack=" + rp;
+                                }
+                                //MessageBox.Show(opline);
+                                arrLine[ind] = opline;
+                            }
+                        }
+                        File.WriteAllLines(GlobalPaths.shaderconfig, arrLine);
+                    }
+                    else
+                    {
+                        foreach (var rp in fullVersion.shaders)
+                        {
+                            opline = "shaderPack=" + rp;
+                        }
+                        File.WriteAllText(GlobalPaths.shaderconfig, opline);
+                    }
+                }
+                try
+                {
+                    foreach (var usersp in Directory.GetFiles(Path.Combine(GlobalPaths.mcpath, "user_shaderpacks")))
+                    {
+                        string spname = Path.GetFileName(usersp);
+                        File.Copy(usersp, Path.Combine(GlobalPaths.shaderpacks, spname), true);
+                    }
+                }
+                catch { Directory.CreateDirectory(Path.Combine(GlobalPaths.mcpath, "user_shaderpacks")); }
+
+
+
+                //russian lang
+                if (!File.Exists(Path.Combine(GlobalPaths.mcpath, "options.txt")))
+                {
+                    File.WriteAllText(Path.Combine(GlobalPaths.mcpath, "options.txt"), "lang:ru_ru");
+                }
+
+
+                //Hide the folders from stoopid users
+                hide("assets");
+                hide("libraries");
+                hide("mods");
+                hide("resourcepacks");
+                hide("runtime");
+                hide("shaderpacks");
+                hide("versions");
+                hide("servermods");
+                hide("defaultconfigs");
+                hide("serverpacks");
+
+                //LAUNCH MINCERAFT and write vars to conf
+                InstallProgress.IsVisible = false;
+                InstallProgressHeader.Text = "Please wait...";
 
 
                 this.Hide();
@@ -360,6 +492,8 @@ public partial class MainWindow : Window
         }
     }
 
+    
+    
     //voices in my head told me this helphelphelphelp
     private async ValueTask<Process> InstallAndBuildOnline(String nickname)
     {
@@ -460,6 +594,36 @@ public partial class MainWindow : Window
         var process = await _launcher.BuildProcessAsync(version_name, launchOption);
         return process;
     }
+    //silly updater
+    private async void updatelauncher()
+    {
+        this.IsEnabled = false;
+        var box = MessageBoxManager
+            .GetMessageBoxStandard("Доступно обновление лаунчера!", "Нажмите ОК, чтобы загрузить обновление "  + Globals.server_version,
+                ButtonEnum.OkCancel);
+        var result = await box.ShowAsync();
+        if (result == ButtonResult.Ok)
+        {
+            string file = "";
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                file = "update.exe";
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                file = "update.dmg";
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                file = "update.AppImage";
+            }
+            var launcher = TopLevel.GetTopLevel(this).Launcher;
+            launcher.LaunchUriAsync(new Uri(Path.Combine(GlobalPaths.serverpath, file)));
+            Environment.Exit(0);
+        }
+        this.IsEnabled = true;
+    }
+    
     
     
     public static void DownloadFileSync(string url, string dest)
@@ -478,7 +642,6 @@ public partial class MainWindow : Window
         if (!di.Attributes.HasFlag(FileAttributes.Hidden))
         { di.Attributes |= FileAttributes.Hidden; }
     }
-    
     private void plzresizeit()
     {
         int height = this.Screens.Primary.Bounds.Height;
@@ -505,7 +668,45 @@ public partial class MainWindow : Window
         _cursorPositionAtWindowDragStart = e.GetPosition(this);
     }
     private void WindowDragHandle_OnPointerReleased(object? sender, PointerReleasedEventArgs e) => _isWindowDragInEffect = false;
+    
+    private async void VersionBoxChange(object? sender, SelectionChangedEventArgs selectionChangedEventArgs)
+    {
+        if ((VersionBox.SelectedIndex == (VersionBox.Items.Count - 1)) && (Globals.isLoading == false))
+        {
+            this.IsEnabled = false;
+            if (Globals.notafirstrun == true)
+            {
+                var box = MessageBoxManager
+                    .GetMessageBoxStandard("Значит ты выбрал Usermods...", "Вы выбрали пользовательские моды в качестве модпака.\nУчтите, что в этом режиме сборки от создателей ReignCraft не будут использоваться, вы должны добавить свой модпак в usermods\nВы хотите открыть папку с пользовательскими модами сейчас?",
+                        ButtonEnum.OkCancel);
+                var result = await box.ShowAsync();
+                if (result == ButtonResult.Ok)
+                {
+                    FileMgr.OpenDirectory(GlobalPaths.usermodfolder);
+                }
+            }
+            this.IsEnabled = true;
+        }
+        Globals.notafirstrun = true;
 
+        FileMgr fileMgr = new FileMgr();
+        Ver? fullVersion = Globals.packfile.ver.FirstOrDefault(v => v.name == VersionBox.SelectedItem);
+        
+        Globals.dwn_mods = fileMgr.getListOfDownloads(GlobalPaths.servmodfolder, fullVersion.mods);
+        Globals.dwn_resourcepacks = fileMgr.getListOfDownloads(GlobalPaths.serverpacks, fullVersion.resourcepacks);
+        Globals.dwn_shaders = fileMgr.getListOfDownloads(GlobalPaths.shaderpacks, fullVersion.shaders);
+        
+        if (Globals.dwn_mods.Count == 0 && Globals.dwn_resourcepacks.Count == 0 && Globals.dwn_shaders.Count == 0)
+        { Globals.pack_update = false; }
+        else
+        { Globals.pack_update = true; }
+        
+        if (!Globals.pack_update)
+        { PackUpdateBox.IsVisible = false; }
+        else
+        { PackUpdateBox.IsVisible = true; }
+    }
+    
     private void openFiles(object? sender, RoutedEventArgs routedEventArgs)
     {
         FileMgr.OpenDirectory(GlobalPaths.mcpath);
@@ -514,6 +715,12 @@ public partial class MainWindow : Window
     {
         Environment.Exit(0);
     }
+    private void MinimizeBtnClick(object? sender, RoutedEventArgs routedEventArgs)
+    {
+        this.WindowState = WindowState.Minimized;
+    }
+    private void updateBtnClick(object? sender, RoutedEventArgs e)
+    {
+        updatelauncher();
+    }
 }
-
-//

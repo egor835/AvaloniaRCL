@@ -31,18 +31,33 @@
         <Panel>
             
             <Image x:Name="bgImage" Source="Assets/bg.png"/>
-            <Image 
-                Margin="20"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Top"
-                Source="Assets/Logo.png"
-                Width="378"
-                Height="72"
-                PointerReleased="WindowDragHandle_OnPointerReleased"
-                PointerPressed="WindowDragHandle_OnPointerPressed"
-                PointerMoved="WindowDragHandle_OnPointerMoved"/>
+            
             <Grid ShowGridLines="False"
-                  ColumnDefinitions="Auto, Auto"
+                  RowDefinitions="Auto, Auto, Auto"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Top"
+                  Margin="0 20 0 0">
+                <Image Grid.Row="0"
+                    HorizontalAlignment="Center"
+                    Source="Assets/Logo.png"
+                    Width="378"
+                    Height="72"
+                    Margin="0 0 0 10 "
+                    PointerReleased="WindowDragHandle_OnPointerReleased"
+                    PointerPressed="WindowDragHandle_OnPointerPressed"
+                    PointerMoved="WindowDragHandle_OnPointerMoved"/>
+                <TextBlock Grid.Row="1"
+                           x:Name="UpdateText"
+                           Foreground="LightGray"
+                           FontSize="18"
+                           HorizontalAlignment="Center"
+                           Text="Версия 0.0.0"/>
+                <TextBlock Grid.Row="2"/>
+            </Grid>
+            
+            
+            <Grid ShowGridLines="False"
+                  ColumnDefinitions="Auto, Auto, Auto"
                   HorizontalAlignment="Left"
                   VerticalAlignment="Top"
                   Margin="20">
@@ -56,15 +71,25 @@
                 <Button Grid.Column="1"
                         Height="70"
                         Width="70"
-                        CornerRadius="35">
+                        CornerRadius="35"
+                        Margin="0 0 5 0 ">
                     <Image Source="Assets/Textbook.png"/>
+                </Button>
+                <Button Grid.Column="2"
+                        x:Name="updateBtn"
+                        Height="70"
+                        Width="70"
+                        CornerRadius="35"
+                        IsVisible="False"
+                        Click="updateBtnClick">
+                    <Image Source="Assets/update.png"/>
                 </Button>
             </Grid>
             <Grid ShowGridLines="False"
                   RowDefinitions="Auto, Auto, Auto"
                   HorizontalAlignment="Left"
                   VerticalAlignment="Top"
-                  Margin="40 130 0 0">
+                  Margin="40 150 0 0">
                 <TextBlock Grid.Row="0"
                         x:Name="NewsLabel"   
                         Margin="0"
@@ -72,8 +97,7 @@
                         Width="700"
                         Foreground="ForestGreen"
                         FontSize="40"
-                        Text ="Нет соединения с сервером">
-                </TextBlock>
+                        Text ="Нет соединения с сервером"/>
                 <TextBlock Grid.Row="1"
                         x:Name="NewsRTB" 
                         Height="430"
@@ -82,8 +106,7 @@
                         Foreground="LightGray"
                         FontSize="25"
                         TextWrapping="Wrap"
-                        Text ="Но если сборка уже установлена, то вы можете начать играть :3">
-                </TextBlock>
+                        Text ="Но если сборка уже установлена, то вы можете начать играть :3"/>
                 <TextBlock Grid.Row="2"/>
             </Grid>
             
@@ -97,7 +120,8 @@
                         Height="70"
                         Width="70"
                         CornerRadius="35"
-                        Margin="0 0 5 0 ">
+                        Margin="0 0 5 0 "
+                        Click="MinimizeBtnClick">
                     <Image Source="Assets/hide.png"/>
                 </Button>
                 <Button Grid.Column="1"
@@ -145,7 +169,8 @@
                               Width="262"
                               Height="40"
                               VerticalContentAlignment="Center"
-                              Margin="0,3"/>
+                              Margin="0,3"
+                              SelectionChanged="VersionBoxChange"/>
                 </Grid>
                 <Button Grid.Column="1"
                         Height="100"
@@ -183,11 +208,11 @@
                       Margin="0 0 20 20">
                     <ProgressBar Grid.Row="0" Grid.Column="0"
                                  x:Name="InstallProgress"
-                                 IsIndeterminate="True"
                                  Maximum="100"
                                  HorizontalAlignment="Right"
                                  Width="310"
                                  Height="10"
+                                 IsVisible="False"
                                  Margin="0, 10, 0, 10"/>
                     <Button Grid.Row="1" Grid.Column="0" 
                             Classes="startBtn"
@@ -212,7 +237,19 @@
                 VerticalAlignment="Bottom"
                 Margin="0 0 20 148"
                 Foreground="White"
+                IsVisible="False"
                 Text="Downloading"/>
+            <TextBlock     
+                x:Name="PackUpdateBox"
+                FontSize="15" 
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Margin="0 0 20 130"
+                TextAlignment="Center"
+                Foreground="Gold"
+                Width="310"
+                Height="20"
+                Text="Доступно обновление сборки"/>
         </Panel>
         </Border>
     </Viewbox>
