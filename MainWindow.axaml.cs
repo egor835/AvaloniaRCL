@@ -91,7 +91,7 @@ public partial class MainWindow : Window
     public static class Globals
     {
         //Launcher version:
-        public static string launcher_version = "1.1.1";
+        public static string launcher_version = "1.1.0";
         public static string server_version = "0.0.0";
         public static string update_type = "none";
         public static bool pack_update = false;
@@ -143,7 +143,7 @@ public partial class MainWindow : Window
         ReadConfig();
         if (!FileMgr.IsMinecraftHere())
         {
-            Globals.config.notafirsttime = false;
+            //Globals.config.notafirsttime = false;
         }
         
         Globals.json = JsonSerializer.Deserialize<Json>(File.ReadAllText(GlobalPaths.jsonPath));
@@ -165,34 +165,38 @@ public partial class MainWindow : Window
             await msg.ShowAsync();
             Environment.Exit(0);
         }
-        String getFrom = Path.Combine(GlobalPaths.serverpath, "versions.json");
-        String dwnTo = Path.Combine(GlobalPaths.datapath, "newversions.json");
         //try to download versions.json
         try
         {
-            DownloadFileSync(getFrom, dwnTo);
-            File.Move(Path.Combine(GlobalPaths.datapath, "newversions.json"), GlobalPaths.versionsPath, true);
+            DownloadFileSync(Path.Combine(GlobalPaths.serverpath, "versions.json"), 
+                Path.Combine(GlobalPaths.datapath, "newversions.json"));
+            File.Move(Path.Combine(GlobalPaths.datapath, "newversions.json"), 
+                GlobalPaths.versionsPath, true);
         }
         catch (Exception ex)
         {
             GlobalPaths.serverpath = Globals.json.secondServer;
             try
             {
-                DownloadFileSync(getFrom, dwnTo);
-                File.Move(Path.Combine(GlobalPaths.datapath, "newversions.json"), GlobalPaths.versionsPath, true);
+                DownloadFileSync(Path.Combine(GlobalPaths.serverpath, "versions.json"), 
+                    Path.Combine(GlobalPaths.datapath, "newversions.json"));
+                File.Move(Path.Combine(GlobalPaths.datapath, "newversions.json"), 
+                    GlobalPaths.versionsPath, true);
             }
             catch (Exception exx)
             {
                 if (!Globals.config.notafirsttime)
                 {
                     MainLauncherWindow.Hide();
-                    var msg = MessageBoxManager.GetMessageBoxStandard("","Проверьте своё интернет-соединение перед первым запуском.");
+                    var msg = MessageBoxManager.GetMessageBoxStandard("",
+                        "Проверьте своё интернет-соединение перед первым запуском.");
                     await msg.ShowAsync();
                     Environment.Exit(0);
                 }
                 else
                 {
-                    var msg = MessageBoxManager.GetMessageBoxStandard("","Проверьте своё интернет-соединение.");
+                    var msg = MessageBoxManager.GetMessageBoxStandard("",
+                        "Проверьте своё интернет-соединение.");
                     await msg.ShowAsync();
                     Globals.isInternetHere = false;
                 }
@@ -210,9 +214,11 @@ public partial class MainWindow : Window
             catch
             {
                 MainLauncherWindow.Hide();
-                var msg = MessageBoxManager.GetMessageBoxStandard("","Проверьте своё интернет-соединение.");
+                var msg = MessageBoxManager.GetMessageBoxStandard("Не удалось получить доступ к данным лаунчера",
+                    "Судя по всему, лаунчер уже запущен. Закройте все предыдущие процессы и повторите попытку.");
                 await msg.ShowAsync();
                 Environment.Exit(0);
+                //MainLauncherWindow.Show();
             }   
         }
         NickBox.Text = Globals.config.username;
@@ -322,6 +328,12 @@ public partial class MainWindow : Window
             await msg.ShowAsync();
             this.IsEnabled = true;
         }
+        else if (!Globals.isInternetHere && Globals.pack_update)
+        {
+            var msg = MessageBoxManager.GetMessageBoxStandard("","Подключитесь к интернету, чтобы использовать эту сборку"); 
+            await msg.ShowAsync();
+            this.IsEnabled = true;
+        }
         else
         {
             try
@@ -332,10 +344,11 @@ public partial class MainWindow : Window
                 PackUpdateBox.IsVisible = false;
                 InstallProgressHeader.IsVisible = true;
                 InstallProgress.IsVisible = true;
+                Globals.config.version = VersionBox.SelectedItem.ToString();
                 Ver? fullVersion = Globals.packfile.ver.FirstOrDefault(v => v.name == VersionBox.SelectedItem);
 
                 var process = new Process();
-                if (!Globals.config.notafirsttime)
+                if (!Globals.config.notafirsttime || !FileMgr.IsMinecraftHere())
                 {
                     try
                     {
@@ -344,8 +357,8 @@ public partial class MainWindow : Window
                     catch (Exception ex)
                     {
                         var msg = MessageBoxManager.GetMessageBoxStandard("",
-                            "Похоже на то, что установка Minecraft завершилась с ошибкой.\\nВероятно, соединение прервано или нет доступа к серверам Microsoft.\\nНажмите ОК, чтобы попытаться скачать Minecraft с сервера ReignCraft.\\n\\nКод ошибки: " +
-                            ex.ToString());
+                            "Похоже на то, что установка Minecraft завершилась с ошибкой.\nВероятно, соединение прервано или нет доступа к серверам Microsoft.\nНажмите ОК, чтобы попытаться скачать Minecraft с сервера ReignCraft.\n\nКод ошибки: " 
+                            + ex.ToString());
                         await msg.ShowAsync();
                         process = await InstallAndBuildOffline(Globals.config.username);
                     }
@@ -364,7 +377,7 @@ public partial class MainWindow : Window
                     await fileMgr.DownloadEveryFile(Path.Combine(GlobalPaths.serverpath, "shaders"), GlobalPaths.shaderpacks, Globals.dwn_shaders, InstallProgress, InstallProgressHeader);
                     await fileMgr.DownloadAndUnpack(Path.Combine(GlobalPaths.serverpath, "configs.zip"), GlobalPaths.configfolder);
                     //README
-                    DownloadFileSync(Path.Combine(Globals.json.updateServer, "README.TXT"), Path.Combine(GlobalPaths.mcpath, "README.TXT"));
+                    DownloadFileSync(Path.Combine(GlobalPaths.serverpath, "README.TXT"), Path.Combine(GlobalPaths.mcpath, "README.TXT"));
                 }
 
                 //MODPACK CHANGER (plz hewp me)
@@ -471,13 +484,13 @@ public partial class MainWindow : Window
                 InstallProgressHeader.Text = "Please wait...";
 
 
-                this.Hide();
+                Hide();
                 Globals.config.notafirsttime = true;
-                WriteConfig();
                 var processUtil = new ProcessWrapper(process);
                 processUtil.OutputReceived += (s, e) => Console.WriteLine(e);
                 processUtil.StartWithEvents();
                 await processUtil.WaitForExitTaskAsync();
+                WriteConfig();
                 Environment.Exit(0);
             }
             catch (Exception ex)
@@ -570,7 +583,20 @@ public partial class MainWindow : Window
 
             //download minceraft
             FileMgr fileMgr = new FileMgr();
-            await fileMgr.DownloadAndUnpack(Path.Combine(GlobalPaths.serverpath, "minecraft.zip"), GlobalPaths.mcpath,
+            var file = "";
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                file = "minecraft-win.zip";
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                file = "minecraft-osx.zip";
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                file = "minecraft-linux.zip";
+            }
+            await fileMgr.DownloadAndUnpack(Path.Combine(GlobalPaths.serverpath, file), GlobalPaths.mcpath,
                 InstallProgress, InstallProgressHeader);
         }
 
@@ -597,31 +623,31 @@ public partial class MainWindow : Window
     //silly updater
     private async void updatelauncher()
     {
-        this.IsEnabled = false;
+        IsEnabled = false;
         var box = MessageBoxManager
             .GetMessageBoxStandard("Доступно обновление лаунчера!", "Нажмите ОК, чтобы загрузить обновление "  + Globals.server_version,
                 ButtonEnum.OkCancel);
         var result = await box.ShowAsync();
         if (result == ButtonResult.Ok)
         {
-            string file = "";
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                file = "update.exe";
+                DownloadFileSync(Path.Combine(GlobalPaths.serverpath, "update.exe"), Path.Combine(GlobalPaths.datapath, "update.exe")); 
+                Process.Start("explorer.exe", Path.Combine(GlobalPaths.datapath, "update.exe"));
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                file = "update.dmg";
+                var launcher = GetTopLevel(this).Launcher;
+                await launcher.LaunchUriAsync(new Uri(Path.Combine(GlobalPaths.serverpath, "update.dmg")));
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                file = "update.AppImage";
+                var launcher = GetTopLevel(this).Launcher;
+                await launcher.LaunchUriAsync(new Uri(Path.Combine(GlobalPaths.serverpath, "update.AppImage")));
             }
-            var launcher = TopLevel.GetTopLevel(this).Launcher;
-            launcher.LaunchUriAsync(new Uri(Path.Combine(GlobalPaths.serverpath, file)));
             Environment.Exit(0);
         }
-        this.IsEnabled = true;
+        IsEnabled = true;
     }
     
     
@@ -644,7 +670,7 @@ public partial class MainWindow : Window
     }
     private void plzresizeit()
     {
-        int height = this.Screens.Primary.Bounds.Height;
+        int height = Screens.Primary.Bounds.Height;
         double k = (Convert.ToDouble(height) / 1080F);
         MainLauncherWindow.Width = Convert.ToInt32(MainLauncherWindow.Width*k);
         MainLauncherWindow.Height = Convert.ToInt32(MainLauncherWindow.Height*k);
@@ -673,11 +699,12 @@ public partial class MainWindow : Window
     {
         if ((VersionBox.SelectedIndex == (VersionBox.Items.Count - 1)) && (Globals.isLoading == false))
         {
-            this.IsEnabled = false;
+            IsEnabled = false;
             if (Globals.notafirstrun == true)
             {
                 var box = MessageBoxManager
-                    .GetMessageBoxStandard("Значит ты выбрал Usermods...", "Вы выбрали пользовательские моды в качестве модпака.\nУчтите, что в этом режиме сборки от создателей ReignCraft не будут использоваться, вы должны добавить свой модпак в usermods\nВы хотите открыть папку с пользовательскими модами сейчас?",
+                    .GetMessageBoxStandard("Значит ты выбрал Usermods...", 
+                        "Вы выбрали пользовательские моды в качестве модпака.\nУчтите, что в этом режиме сборки от создателей ReignCraft не будут использоваться, вы должны добавить свой модпак в usermods\nВы хотите открыть папку с пользовательскими модами сейчас?",
                         ButtonEnum.OkCancel);
                 var result = await box.ShowAsync();
                 if (result == ButtonResult.Ok)
@@ -685,7 +712,7 @@ public partial class MainWindow : Window
                     FileMgr.OpenDirectory(GlobalPaths.usermodfolder);
                 }
             }
-            this.IsEnabled = true;
+            IsEnabled = true;
         }
         Globals.notafirstrun = true;
 
@@ -719,8 +746,20 @@ public partial class MainWindow : Window
     {
         this.WindowState = WindowState.Minimized;
     }
-    private void updateBtnClick(object? sender, RoutedEventArgs e)
+    private void UpdateBtnClick(object? sender, RoutedEventArgs e)
     {
         updatelauncher();
+    }
+
+    private async void TextbookClick(object? sender, RoutedEventArgs e)
+    {
+        var launcher = GetTopLevel(this).Launcher;
+        await launcher.LaunchUriAsync(new Uri("https://modrinth.com/organization/reign-devs"));
+    }
+
+    private async void SunflowerClick(object? sender, RoutedEventArgs e)
+    {
+        var launcher = GetTopLevel(this).Launcher;
+        await launcher.LaunchUriAsync(new Uri("https://t.me/reignmod"));
     }
 }

@@ -65,14 +65,16 @@
                         Height="70"
                         Width="70"
                         CornerRadius="35"
-                        Margin="0 0 5 0 ">
+                        Margin="0 0 5 0 "
+                        Click="SunflowerClick">
                     <Image Source="Assets/Sunflower.png"/>
                 </Button>
                 <Button Grid.Column="1"
                         Height="70"
                         Width="70"
                         CornerRadius="35"
-                        Margin="0 0 5 0 ">
+                        Margin="0 0 5 0 "
+                        Click="TextbookClick">
                     <Image Source="Assets/Textbook.png"/>
                 </Button>
                 <Button Grid.Column="2"
@@ -81,7 +83,7 @@
                         Width="70"
                         CornerRadius="35"
                         IsVisible="False"
-                        Click="updateBtnClick">
+                        Click="UpdateBtnClick">
                     <Image Source="Assets/update.png"/>
                 </Button>
             </Grid>

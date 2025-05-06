@@ -41,12 +41,13 @@ namespace RCL
         }
         public async Task DownloadAndUnpack(String whereis, String whereitneed, ProgressBar pb, TextBlock tb)
         {
+            var btmb = 0.00000095367432;
             using (var client = new HttpClientDownloadWithProgress(whereis, Path.Combine(GlobalPaths.datapath, Path.GetFileName(whereis))))
             {
                 client.ProgressChanged += (totalFileSize, totalBytesDownloaded, progressPercentage) =>
                 {
                     pb.Value = Convert.ToInt32(progressPercentage);
-                    tb.Text = $"[Загрузка {Path.GetFileName(whereis)}: {totalBytesDownloaded}/{totalFileSize}]";
+                    tb.Text = $"[Загрузка {Path.GetFileName(whereis)}: {Convert.ToInt32(totalBytesDownloaded*btmb)}/{Convert.ToInt32(totalFileSize*btmb)} MB]";
                 };
                 await client.StartDownload();
             }
