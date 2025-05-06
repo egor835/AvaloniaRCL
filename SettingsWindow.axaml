@@ -1,0 +1,133 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="RCL.SettingsWindow"
+        Title="Settings"
+        Width="280"
+        Height="320"
+        CanResize="False"
+        TransparencyLevelHint="Transparent"
+        Background="Transparent"
+        SystemDecorations="None"
+        Opened="SettingsOpen">
+        <Window.Styles>
+                <Style Selector="Button.closeBtn:pointerover ContentPresenter">
+                        <Setter Property="Background" Value="Red"/>
+                </Style>
+                <Style Selector="Button.acceptBtn:pointerover ContentPresenter">
+                        <Setter Property="Background" Value="DarkGoldenrod"/>
+                </Style>
+                <Style Selector="Button.resetBtn:pointerover ContentPresenter">
+                        <Setter Property="Background" Value="Red"/>
+                </Style>
+                <Style Selector="CheckBox.chkbx:pointerover ContentPresenter">
+                        <Setter Property="Foreground" Value="Azure"/>
+                </Style>
+        </Window.Styles>
+        <Viewbox>
+                <Border x:Name="MainBorder" 
+                        CornerRadius="20" 
+                        Background="Black"
+                        ClipToBounds="True"
+                        Width="350"
+                        Height="400">
+                <Panel>
+                        <Image Source="Assets/Settings_background.png"
+                               PointerReleased="WindowDragHandle_OnPointerReleased"
+                               PointerPressed="WindowDragHandle_OnPointerPressed"
+                               PointerMoved="WindowDragHandle_OnPointerMoved"/>
+           
+                        <Button Height="40"
+                                Width="40"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Top"
+                                CornerRadius="35"
+                                Margin="10"
+                                Background="DarkRed"
+                                Classes="closeBtn"
+                                Click="CloseBtnClick">
+                                <Image Source="Assets/Exit.png"/>
+                        </Button>
+                        
+                        <Grid ShowGridLines="False"
+                              RowDefinitions="Auto, Auto, Auto"
+                              Margin="15 60 0 0 ">
+                                <CheckBox Grid.Row="0"
+                                          Classes="chkbx"
+                                          x:Name="Proxy"
+                                          IsChecked="False"
+                                          Content="Использовать прокси-сервер"
+                                          Foreground="Azure"/>
+                                <CheckBox Grid.Row="1"
+                                          Classes="chkbx"
+                                          x:Name="AutoLogin"
+                                          IsChecked="False"
+                                          Content="Автовход на сервер"
+                                          Foreground="Azure"/>
+                                <CheckBox Grid.Row="2"
+                                          Classes="chkbx"
+                                          x:Name="ShadersNotManaged"
+                                          IsChecked="False"
+                                          Content="Отключить автовыбор шейдеров"
+                                          Foreground="Azure"/>
+                                
+                        </Grid>
+                        
+                        <TextBlock x:Name="RamBox"
+                                   Text="Выделенная память: 0000 МБ"
+                                   Foreground="Azure"
+                                   VerticalAlignment="Bottom"
+                                   Margin="20 0 20 100">
+                        </TextBlock>
+                        
+                        <Slider x:Name="RamBar"
+                                Ticks="10"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Bottom"
+                                Margin="20 0 20 50"
+                                ValueChanged="RamChanged">
+                        </Slider>
+                        
+                        <Grid ShowGridLines="False"
+                              ColumnDefinitions="Auto, Auto"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Bottom"
+                              Margin="0 0 0 10 ">
+                                <Button Grid.Column="0" 
+                                        Classes="resetBtn"
+                                        x:Name="ResetButton" 
+                                        CornerRadius="35" 
+                                        HorizontalAlignment="Right"
+                                        Background="DarkRed" 
+                                        Height="40" 
+                                        Width="150" 
+                                        Margin="0 0 5 0"
+                                        HorizontalContentAlignment="Center" 
+                                        VerticalContentAlignment="Center" 
+                                        FontSize="20" 
+                                        Click="ResetButton_click"
+                                        Content="Уничтожить">
+                                </Button>  
+                                <Button Grid.Column="1" 
+                                        Classes="acceptBtn"
+                                        x:Name="StartButton" 
+                                        CornerRadius="35" 
+                                        HorizontalAlignment="Right"
+                                        Background="Gold" 
+                                        Height="40" 
+                                        Width="150" 
+                                        Margin="5 0 0 0"
+                                        HorizontalContentAlignment="Center" 
+                                        VerticalContentAlignment="Center" 
+                                        FontSize="20" 
+                                        Click="OK_click"
+                                        Content="Принять">
+                                </Button>  
+                        </Grid>
+                </Panel>
+                </Border>
+        </Viewbox>
+</Window>

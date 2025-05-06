@@ -119,7 +119,7 @@ public partial class MainWindow : Window
                 version = "",
                 ram = 4096,
                 proxy = false,
-                enableShaders = false,
+                enableShaders = true,
                 faststart = false,
                 notafirsttime = false,
             };
@@ -143,7 +143,7 @@ public partial class MainWindow : Window
         ReadConfig();
         if (!FileMgr.IsMinecraftHere())
         {
-            //Globals.config.notafirsttime = false;
+            Globals.config.notafirsttime = false;
         }
         
         Globals.json = JsonSerializer.Deserialize<Json>(File.ReadAllText(GlobalPaths.jsonPath));
@@ -511,20 +511,17 @@ public partial class MainWindow : Window
     private async ValueTask<Process> InstallAndBuildOnline(String nickname)
     {
         MinecraftLauncher _launcher = new MinecraftLauncher(new MinecraftPath(GlobalPaths.mcpath));
-        if (!FileMgr.IsMinecraftHere())
-        {
-            try
-            {
-                FileMgr.cleanMcFolder(GlobalPaths.mcpath);
-            }
-            catch (Exception ex)
-            {
-                var msg = MessageBoxManager.GetMessageBoxStandard("",
-                    "Произошла ошибка при подготовке к установке Minecraft.\nЗакройте все процессы использующие Java или перезагрузите компьютер.\n\nКод ошибки: " +
-                    ex.ToString());
-                await msg.ShowAsync();
-                Environment.Exit(0);
-            }
+        try 
+        { 
+            FileMgr.cleanMcFolder(GlobalPaths.mcpath);
+        }
+        catch (Exception ex) 
+        { 
+            var msg = MessageBoxManager.GetMessageBoxStandard("", 
+                "Произошла ошибка при подготовке к установке Minecraft.\nЗакройте все процессы использующие Java или перезагрузите компьютер.\n\nКод ошибки: " +
+                ex.ToString());
+            await msg.ShowAsync(); 
+            Environment.Exit(0);
         }
 
         _launcher.FileProgressChanged += (_, e) =>
@@ -672,8 +669,8 @@ public partial class MainWindow : Window
     {
         int height = Screens.Primary.Bounds.Height;
         double k = (Convert.ToDouble(height) / 1080F);
-        MainLauncherWindow.Width = Convert.ToInt32(MainLauncherWindow.Width*k);
-        MainLauncherWindow.Height = Convert.ToInt32(MainLauncherWindow.Height*k);
+        Width = Convert.ToInt32(Width*k);
+        Height = Convert.ToInt32(Height*k);
     }
     
     //make window draggable
@@ -738,6 +735,17 @@ public partial class MainWindow : Window
     {
         FileMgr.OpenDirectory(GlobalPaths.mcpath);
     }
+    
+    private async void openSettings(object? sender, RoutedEventArgs routedEventArgs)
+    {
+        WriteConfig();
+        IsEnabled = false;
+        var window = new SettingsWindow();
+        await window.ShowDialog(this);
+        IsEnabled = true;
+        ReadConfig();
+    }
+    
     private void CloseBtnClick(object? sender, RoutedEventArgs routedEventArgs)
     {
         Environment.Exit(0);
