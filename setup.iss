@@ -40,7 +40,7 @@ function IsDotNet6Installed: Boolean;
 var
   regVersion: Cardinal;
 begin
-  Result := RegQueryDWordValue(HKLM, 'SOFTWARE\WOW6432Node\dotnet\Setup\InstalledVersions\x86\sharedfx\Microsoft.WindowsDesktop.App', '8.0.15', regVersion);
+  Result := RegQueryDWordValue(HKLM, 'SOFTWARE\WOW6432Node\dotnet\Setup\InstalledVersions\x64\sharedfx\Microsoft.WindowsDesktop.App', '8.0.15', regVersion);
 end;
 
 function InitializeSetup: Boolean;
