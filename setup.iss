@@ -54,13 +54,13 @@ begin
 
   if not dotNet6Installed then
   begin
-    MsgBox('Библиотеки .NET 6 Desktop не найдены на вашем компьютере. Нажмите ОК, чтобы установить необходимые библиотеки.', mbInformation, MB_OK);
-    ExtractTemporaryFile('net6.0desktop_x86.exe');
-    Exec(ExpandConstant('{tmp}\net6.0desktop_x86.exe'), '', '', SW_SHOWNORMAL, ewWaitUntilTerminated, ResultCode);
+    MsgBox('Библиотеки .NET 8 Desktop не найдены на вашем компьютере. Нажмите ОК, чтобы установить необходимые библиотеки.', mbInformation, MB_OK);
+    ExtractTemporaryFile('net8.0desktop_x64.exe');
+    Exec(ExpandConstant('{tmp}\net8.0desktop_x64.exe'), '', '', SW_SHOWNORMAL, ewWaitUntilTerminated, ResultCode);
     dotNet6Installed := IsDotNet6Installed;
     if not dotNet6Installed then
     begin
-      MsgBox('Установка .NET 6 Desktop завершена с ошибкой. Перезапустите установщик.', mbError, MB_OK);
+      MsgBox('Установка .NET 8 Desktop завершена с ошибкой. Перезапустите установщик.', mbError, MB_OK);
       Result := False;
     end;
   end;
