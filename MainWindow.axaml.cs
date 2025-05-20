@@ -9,6 +9,7 @@ using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -38,23 +39,23 @@ public partial class MainWindow : Window
     {
         public List<Ver> ver { get; set; }
     }
-    //newz
+    //newz (and not only)
     public class Newz
     {
         public string title { get; set; }
         public List<string> news { get; set; }
         public string king { get; set; }
+        public string lversion { get; set; }
+        public string mcversion { get; set; }
+        public string ip { get; set; }
+        public string proxy { get; set; }
+        public int port { get; set; }
     }
     //fetch config
     public class Json
     {
-        public string ip { get; set; }
-        public string proxy { get; set; }
-        public int port { get; set; }
         public string updateServer { get; set; }
         public string secondServer { get; set; }
-        public string mcversion { get; set; }
-        public string forgeversion { get; set; }
     }
     //no appdata lol
     public class Config
@@ -96,7 +97,7 @@ public partial class MainWindow : Window
         public static string update_type = "none";
         public static bool pack_update = false;
         //config
-        public static Json json;
+        public static Newz news;
         public static Config config;
         //versions
         public static Packfile packfile;
@@ -146,9 +147,6 @@ public partial class MainWindow : Window
             Globals.config.notafirsttime = false;
         }
         
-        Globals.json = JsonSerializer.Deserialize<Json>(File.ReadAllText(GlobalPaths.jsonPath));
-        GlobalPaths.serverpath = Globals.json.updateServer;
-        
         //init minecraft
         InitializeComponent();
         plzresizeit();
@@ -166,39 +164,49 @@ public partial class MainWindow : Window
             Environment.Exit(0);
         }
         //try to download versions.json
+        Json json = JsonSerializer.Deserialize<Json>(File.ReadAllText(GlobalPaths.jsonPath));
+        GlobalPaths.serverpath = json.updateServer;
         try
         {
             DownloadFileSync(Path.Combine(GlobalPaths.serverpath, "versions.json"), 
-                Path.Combine(GlobalPaths.datapath, "newversions.json"));
-            File.Move(Path.Combine(GlobalPaths.datapath, "newversions.json"), 
-                GlobalPaths.versionsPath, true);
+                GlobalPaths.versionsPath);
+            try
+            {
+                File.Copy(GlobalPaths.versionsPath,
+                    Path.Combine(GlobalPaths.datapath, "versions.bak"), true);
+            }
+            catch (Exception e) { }
         }
         catch (Exception ex)
         {
-            GlobalPaths.serverpath = Globals.json.secondServer;
+            Console.WriteLine(ex);
+            GlobalPaths.serverpath = json.secondServer;
             try
             {
                 DownloadFileSync(Path.Combine(GlobalPaths.serverpath, "versions.json"), 
-                    Path.Combine(GlobalPaths.datapath, "newversions.json"));
-                File.Move(Path.Combine(GlobalPaths.datapath, "newversions.json"), 
-                    GlobalPaths.versionsPath, true);
+                    GlobalPaths.versionsPath);
+                File.Copy(GlobalPaths.versionsPath, 
+                    Path.Combine(GlobalPaths.datapath, "versions.bak"), true);
             }
             catch (Exception exx)
             {
-                if (!Globals.config.notafirsttime)
+                if (Globals.config.notafirsttime && File.Exists(Path.Combine(GlobalPaths.datapath, "versions.bak")))
+                {
+                    var msg = MessageBoxManager.GetMessageBoxStandard("",
+                        "Проверьте своё интернет-соединение.");
+                    await msg.ShowAsync();
+                    File.Copy(Path.Combine(GlobalPaths.datapath, "versions.bak"), 
+                        GlobalPaths.versionsPath, true);
+                    Globals.isInternetHere = false;
+                    
+                }
+                else
                 {
                     MainLauncherWindow.Hide();
                     var msg = MessageBoxManager.GetMessageBoxStandard("",
                         "Проверьте своё интернет-соединение перед первым запуском.");
                     await msg.ShowAsync();
                     Environment.Exit(0);
-                }
-                else
-                {
-                    var msg = MessageBoxManager.GetMessageBoxStandard("",
-                        "Проверьте своё интернет-соединение.");
-                    await msg.ShowAsync();
-                    Globals.isInternetHere = false;
                 }
             }
         }
@@ -221,6 +229,8 @@ public partial class MainWindow : Window
                 //MainLauncherWindow.Show();
             }   
         }
+        string newsCont = File.ReadAllText(Path.Combine(GlobalPaths.datapath, "news.json"));
+        Globals.news = JsonSerializer.Deserialize<Newz>(newsCont);
         NickBox.Text = Globals.config.username;
         
         //bg and get versions
@@ -282,12 +292,9 @@ public partial class MainWindow : Window
         //news
         if (Globals.isInternetHere)
         {
-            string newsPath = Path.Combine(GlobalPaths.datapath, "news.json");
-            string newsCont = File.ReadAllText(newsPath);
-            Newz? news = JsonSerializer.Deserialize<Newz>(newsCont);
-            NewsLabel.Text = news.title;
+            NewsLabel.Text = Globals.news.title;
             NewsRTB.Text = "";
-            foreach (var neww in news.news)
+            foreach (var neww in Globals.news.news)
             {
                 NewsRTB.Text += ("• " + neww + (Environment.NewLine + Environment.NewLine));
             }
@@ -487,10 +494,10 @@ public partial class MainWindow : Window
                 Hide();
                 Globals.config.notafirsttime = true;
                 var processUtil = new ProcessWrapper(process);
+                WriteConfig();
                 processUtil.OutputReceived += (s, e) => Console.WriteLine(e);
                 processUtil.StartWithEvents();
                 await processUtil.WaitForExitTaskAsync();
-                WriteConfig();
                 Environment.Exit(0);
             }
             catch (Exception ex)
@@ -533,7 +540,7 @@ public partial class MainWindow : Window
             InstallProgress.Value = Convert.ToInt32(e.ToRatio() * 100);
         };
         var forge = new ForgeInstaller(_launcher);
-        var version_name = await forge.Install(Globals.json.mcversion, Globals.json.forgeversion);
+        var version_name = await forge.Install(Globals.news.mcversion);
         
         var launchOption = new MLaunchOption
         {
@@ -546,8 +553,8 @@ public partial class MainWindow : Window
             {
                 MaximumRamMb = Globals.config.ram,
                 Session = MSession.CreateOfflineSession(nickname),
-                ServerIp = Globals.json.ip,
-                ServerPort = Globals.json.port,
+                ServerIp = Globals.news.ip,
+                ServerPort = Globals.news.port,
             };
         }
         var process = await _launcher.InstallAndBuildProcessAsync(version_name, launchOption);
@@ -596,8 +603,18 @@ public partial class MainWindow : Window
             await fileMgr.DownloadAndUnpack(Path.Combine(GlobalPaths.serverpath, file), GlobalPaths.mcpath,
                 InstallProgress, InstallProgressHeader);
         }
-
-        var version_name = (Globals.json.mcversion + "-forge-" + Globals.json.forgeversion);
+        
+        String version_name = "";
+        foreach (var element in Directory.GetDirectories(Path.Combine(GlobalPaths.mcpath, "versions")))
+        {
+            var namel = Path.GetFileName(element);
+            if (namel.Contains("forge"))
+            {
+                version_name = namel;
+                break;
+            }
+        }
+        Console.WriteLine("Starting "+version_name);
         
         var launchOption = new MLaunchOption
         {
@@ -610,8 +627,8 @@ public partial class MainWindow : Window
             {
                 MaximumRamMb = Globals.config.ram,
                 Session = MSession.CreateOfflineSession(nickname),
-                ServerIp = Globals.json.ip,
-                ServerPort = Globals.json.port,
+                ServerIp = Globals.news.ip,
+                ServerPort = Globals.news.port,
             };
         }
         var process = await _launcher.BuildProcessAsync(version_name, launchOption);
@@ -655,6 +672,7 @@ public partial class MainWindow : Window
         client.Timeout = TimeSpan.FromSeconds(15);
         var data = client.GetByteArrayAsync(url).GetAwaiter().GetResult();
         File.WriteAllBytes(dest, data);
+        Thread.Sleep(50);
     }
     private void hide(string foldername)
     {

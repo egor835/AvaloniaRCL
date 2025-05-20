@@ -1,9 +1,4 @@
 {
-    "ip": "185.9.145.213",
-    "proxy": "45.154.35.134",
-    "port": 15056,
-    "updateServer": "http://45.154.35.134/auncher",
-    "secondServer": "http://79.174.40.8/launcher",
-    "mcversion": "1.20.1",
-    "forgeversion": "47.3.12"
+    "updateServer": "http://45.154.35.134/llauncher",
+    "secondServer": "http://79.174.40.8/launcher"
 }
