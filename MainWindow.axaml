@@ -21,6 +21,26 @@
         <Style Selector="Button.startBtn:pointerover ContentPresenter">
             <Setter Property="Background" Value="DarkGoldenrod"/>
         </Style>
+        <Style Selector="Button.mods:pointerover ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Content">
+                <Template>
+                    <Image Source="Assets/Mods_hover.png"
+                           Height="60"
+                           Width="60"/>
+                </Template>
+            </Setter>
+        </Style>
+        <Style Selector="Button.settings:pointerover ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Content">
+                <Template>
+                    <Image Source="Assets/Settings_hover.png"
+                           Height="60"
+                           Width="60"/>
+                </Template>
+            </Setter>
+        </Style>
         <Style Selector="TextBox:pointerover ContentPresenter">
             <Setter Property="Background" Value="White"/>
             <Setter Property="CornerRadius" Value="20"/>
@@ -30,7 +50,11 @@
             <Setter Property="CornerRadius" Value="20"/>
         </Style>
         <Style Selector="TextBox:focus-within ContentPresenter">
-            <Setter Property="Background" Value="GreenYellow"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="CornerRadius" Value="20"/>
+        </Style>
+        <Style Selector="ComboBox ContentPresenter">
+            <Setter Property="Background" Value="White"/>
             <Setter Property="CornerRadius" Value="20"/>
         </Style>
         <Style Selector="ComboBox:pointerover ContentPresenter">
@@ -38,6 +62,10 @@
             <Setter Property="CornerRadius" Value="20"/>
         </Style>
         <Style Selector="ComboBox:click ContentPresenter">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="CornerRadius" Value="20"/>
+        </Style>
+        <Style Selector="ComboBox:focus-within ContentPresenter">
             <Setter Property="Background" Value="White"/>
             <Setter Property="CornerRadius" Value="20"/>
         </Style>
@@ -88,6 +116,7 @@
                         Width="70"
                         CornerRadius="10"
                         Margin="0 0 5 0 "
+                        Background="Transparent"
                         Click="SunflowerClick">
                     <Image Source="Assets/Sunflower.png"/>
                 </Button>
@@ -96,6 +125,7 @@
                         Width="70"
                         CornerRadius="35"
                         Margin="0 0 5 0 "
+                        Background="Transparent"
                         Click="TextbookClick">
                     <Image Source="Assets/Textbook.png"/>
                 </Button>
@@ -105,6 +135,7 @@
                         Width="70"
                         CornerRadius="35"
                         IsVisible="False"
+                        Background="Transparent"
                         Click="UpdateBtnClick">
                     <Image Source="Assets/update.png"/>
                 </Button>
@@ -220,12 +251,14 @@
                               SelectionChanged="VersionBoxChange"/>
                 </Grid>
                 <Button Grid.Column="1"
+                        Classes="mods"
                         Height="100"
                         Width="100"
                         CornerRadius="35"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Bottom"
                         Margin="0 0 0 20 "
+                        Background="Transparent"
                         Click="openFiles">
                     <Image Source="Assets/Mods.png"
                            Height="60"
@@ -238,12 +271,14 @@
                        Width="240"
                        Height="171"/>
                 <Button Grid.Column="3"
+                        Classes="settings"
                         Height="100"
                         Width="100"
                         CornerRadius="50"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Bottom"
                         Margin="0 0 0 20"
+                        Background="Transparent"
                         Click = "openSettings">
                     <Image Source="Assets/Settings.png"
                            Height="60"

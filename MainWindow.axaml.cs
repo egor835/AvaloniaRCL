@@ -62,6 +62,8 @@ public partial class MainWindow : Window
     {
         public string username { get; set; }
         public string version { get; set; }
+        public string lastip { get; set; }
+        public int lastport { get; set; }
         public int ram { get; set; }
         public bool proxy { get; set; }
         public bool faststart { get; set; }
@@ -118,6 +120,8 @@ public partial class MainWindow : Window
             {
                 username = "",
                 version = "",
+                lastip = "",
+                lastport = 0,
                 ram = 4096,
                 proxy = false,
                 enableShaders = true,
@@ -216,8 +220,8 @@ public partial class MainWindow : Window
             try
             {
                 DownloadFileSync(Path.Combine(GlobalPaths.serverpath, "bg.png"), Path.Combine(GlobalPaths.datapath, "bg.png"));
-                DownloadFileSync(Path.Combine(GlobalPaths.serverpath, "news.json"), Path.Combine(GlobalPaths.datapath, "news.json"));
                 DownloadFileSync(Path.Combine(GlobalPaths.serverpath, "servers.dat"), Path.Combine(GlobalPaths.mcpath, "servers.dat"));
+                DownloadFileSync(Path.Combine(GlobalPaths.serverpath, "news.json"), Path.Combine(GlobalPaths.datapath, "news.json"));
             }
             catch
             {
@@ -346,7 +350,7 @@ public partial class MainWindow : Window
             try
             {
                 FileMgr fileMgr = new FileMgr();
-                StartButton.Content = "plzwait";
+                StartButton.Content = "Установка";
                 Globals.config.username = NickBox.Text.Trim();
                 PackUpdateBox.IsVisible = false;
                 InstallProgressHeader.IsVisible = true;
@@ -354,6 +358,7 @@ public partial class MainWindow : Window
                 Globals.config.version = VersionBox.SelectedItem.ToString();
                 Ver? fullVersion = Globals.packfile.ver.FirstOrDefault(v => v.name == VersionBox.SelectedItem);
 
+                //download minecraft
                 var process = new Process();
                 if (!Globals.config.notafirsttime || !FileMgr.IsMinecraftHere())
                 {
@@ -374,7 +379,6 @@ public partial class MainWindow : Window
                 {
                     process = await InstallAndBuildOffline(Globals.config.username);
                 }
-
 
                 //silly mod updater
                 if (Globals.isInternetHere && Globals.pack_update)
@@ -465,8 +469,6 @@ public partial class MainWindow : Window
                 }
                 catch { Directory.CreateDirectory(Path.Combine(GlobalPaths.mcpath, "user_shaderpacks")); }
 
-
-
                 //russian lang
                 if (!File.Exists(Path.Combine(GlobalPaths.mcpath, "options.txt")))
                 {
@@ -488,10 +490,31 @@ public partial class MainWindow : Window
 
                 //LAUNCH MINCERAFT and write vars to conf
                 InstallProgress.IsVisible = false;
-                InstallProgressHeader.Text = "Please wait...";
+                InstallProgressHeader.Text = "Пожалуйста подождите...";
 
-
+                //move maps and waypoints to new folder
+                if (Globals.config.lastip != Globals.news.ip)
+                {
+                    Console.WriteLine("Searching for xaero maps and waypoints");
+                    String xaerofolder =  Path.Combine(Path.Combine(GlobalPaths.mcpath, "xaero"), "world-map");
+                    String waypoints =  Path.Combine(GlobalPaths.mcpath, "XaeroWaypoints");
+                    if (Directory.Exists(Path.Combine(xaerofolder, "Multiplayer_" + Globals.config.lastip)))
+                    {
+                        Directory.Move(Path.Combine(xaerofolder, "Multiplayer_" + Globals.config.lastip), 
+                            Path.Combine(xaerofolder, "Multiplayer_" + Globals.news.ip));
+                    } else {Console.WriteLine("Maps not found");}
+                    if (Directory.Exists(Path.Combine(waypoints, "Multiplayer_" + Globals.config.lastip)))
+                    {
+                        Directory.Move(Path.Combine(waypoints, "Multiplayer_" + Globals.config.lastip), 
+                            Path.Combine(waypoints, "Multiplayer_" + Globals.news.ip));
+                    }else {Console.WriteLine("Waypoints not found");}
+                }
+                
+                
+                
                 Hide();
+                Globals.config.lastip = Globals.news.ip;
+                Globals.config.lastport = Globals.news.port;
                 Globals.config.notafirsttime = true;
                 var processUtil = new ProcessWrapper(process);
                 WriteConfig();
@@ -513,8 +536,6 @@ public partial class MainWindow : Window
     }
 
     
-    
-    //voices in my head told me this helphelphelphelp
     private async ValueTask<Process> InstallAndBuildOnline(String nickname)
     {
         MinecraftLauncher _launcher = new MinecraftLauncher(new MinecraftPath(GlobalPaths.mcpath));
@@ -560,7 +581,7 @@ public partial class MainWindow : Window
         var process = await _launcher.InstallAndBuildProcessAsync(version_name, launchOption);
         return process;
     }
-    //BEGONE THOT !!!11!
+    
     private async ValueTask<Process> InstallAndBuildOffline(String nickname)
     {
         //create this fucking launcher task
@@ -634,6 +655,7 @@ public partial class MainWindow : Window
         var process = await _launcher.BuildProcessAsync(version_name, launchOption);
         return process;
     }
+    
     //silly updater
     private async void updatelauncher()
     {
@@ -663,8 +685,6 @@ public partial class MainWindow : Window
         }
         IsEnabled = true;
     }
-    
-    
     
     public static void DownloadFileSync(string url, string dest)
     {
